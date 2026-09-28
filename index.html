@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ace Cafe Brighton - Launch Event</title>
+<style>
+  :root {
+    --carbon: #0b0b0c;
+    --carbon-soft: #161618;
+    --red: #c40000;
+    --red-deep: #d92010;
+    --text: #f5f5f5;
+    --muted: #d0d0d0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    font-size: 1.125rem;
+    line-height: 1.65;
+    background: var(--carbon);
+    color: var(--text);
+  }
+
+  header {
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 14px),
+      var(--carbon);
+    border-bottom: 6px solid var(--red);
+    padding: 56px 20px 48px 20px;
+    text-align: center;
+  }
+
+  header h1 {
+    margin: 0 0 16px 0;
+    font-size: clamp(2.2rem, 8vw, 4.5rem);
+    line-height: 1.05;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #ffffff;
+  }
+
+  header p {
+    margin: 0 auto;
+    max-width: 30ch;
+    font-size: clamp(1.25rem, 4.5vw, 1.9rem);
+    font-weight: 700;
+    color: var(--red);
+  }
+
+  main {
+    padding: 8px 16px 40px 16px;
+    background: linear-gradient(to bottom, #000000 0%, #ffd400 40%, #ff7a00 70%, var(--red) 100%);
+  }
+
+  .about {
+    max-width: 760px;
+    margin: 32px auto;
+    padding: 24px 24px 24px 20px;
+    background: var(--carbon-soft);
+    border-left: 8px solid var(--red);
+    border-radius: 6px;
+  }
+
+  .about h2 {
+    margin: 0 0 12px 0;
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--red);
+  }
+
+  .about p {
+    margin: 0;
+    color: var(--text);
+  }
+
+  /* Keeps any sections added later matching the dark theme. */
+  main .live-section {
+    background: var(--carbon-soft);
+    color: var(--text);
+    border-color: #3a3a3d;
+  }
+
+  main .live-section a {
+    color: var(--red);
+  }
+
+  footer {
+    border-top: 4px solid var(--red);
+    background: #000000;
+    text-align: center;
+    padding: 24px 16px;
+    font-size: 1rem;
+    color: var(--muted);
+  }
+
+  footer p { margin: 0; }
+
+  @media (min-width: 700px) {
+    header { padding: 88px 24px 72px 24px; }
+    body { font-size: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="event-name">Ace Cafe Brighton - Launch Event</h1>
+  <p id="event-tagline">The road ends here. The night starts here.</p>
+</header>
+
+<main>
+  <section class="about">
+    <h2>About this event</h2>
+    <p>Come and celebrate the launch of Ace Cafe Brighton with a crowd that loves engines, good company and a bold night out. Whether you arrive on two wheels, four wheels or your own two feet, you are welcome here. Bring your friends, share your stories and help us kick things off in style.</p>
+  </section>
+</main>
+
+<footer>
+  <p>A made-up event for a learning project. Nothing here is real.</p>
+</footer>
+
+<!-- YOUR SCRIPTS GO HERE, just above the closing body tag -->
+
+</body>
+</html>

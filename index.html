@@ -127,5 +127,214 @@
 
 <!-- YOUR SCRIPTS GO HERE, just above the closing body tag -->
 
+<script>
+/* ================= YOUR SETTINGS (change only this) ================= */
+var API = "https://script.google.com/macros/s/AKfycbwdAiBTk9MuqMo7OB9S8tEj8UGdKR8FOLr4fOaY1bE5pd_Y57yKyOTjEVl1i2Q2tGlH/exec";
+/* ==================================================================== */
+
+var LANG = "en";
+var LIVE = null;
+var HOOKS = [];
+
+var TEXT = {
+  en: {
+    when: "When",
+    where: "Where",
+    placesLeft: "Places left: {n} of {total}",
+    full: "This event is full. You can still join the waiting list.",
+    paused: "This page is paused for now. Please check back soon.",
+    scheduleTitle: "Schedule",
+    faqTitle: "Frequently asked questions",
+    loadError: "Sorry, the live information could not load. Please try again later."
+  }
+};
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function t(key) {
+  var own = TEXT[LANG] && TEXT[LANG][key];
+  return own || TEXT.en[key] || key;
+}
+
+function fmt(text, vars) {
+  return String(text).replace(/\{(\w+)\}/g, function (m, k) {
+    return vars[k] === undefined ? m : vars[k];
+  });
+}
+
+function el(tag, text, className) {
+  var e = document.createElement(tag);
+  if (text !== undefined && text !== null) {
+    e.textContent = text;
+  }
+  if (className) {
+    e.className = className;
+  }
+  return e;
+}
+
+// Simple styles for everything this code adds. Change the colours if you like.
+(function addStyles() {
+  var s = document.createElement("style");
+  s.textContent =
+    ".live-section{max-width:760px;margin:24px auto;padding:16px;" +
+    "border:1px solid #c9c9c9;border-radius:10px;background:#ffffff;color:#1a1a1a;}" +
+    ".live-section h2{margin-top:0;font-size:1.3em;}" +
+    ".live-section details{margin:8px 0;}" +
+    ".live-section summary{cursor:pointer;font-weight:bold;}" +
+    ".places{font-weight:bold;font-size:1.1em;}" +
+    "#announcement{background:#fff3cd;color:#3d2f00;border-bottom:2px solid #e0b100;" +
+    "padding:12px 16px;text-align:center;font-weight:bold;}";
+  document.head.appendChild(s);
+})();
+
+// Find a section on your page by its id. If your page does not have one,
+// make it and put it in a sensible place. "order" decides the position.
+function box(id, order) {
+  var found = $(id);
+  if (found) {
+    return found;
+  }
+  var s = el("section");
+  s.id = id;
+  s.className = "live-section";
+  s.setAttribute("data-order", String(order));
+  var main = document.querySelector("main");
+  if (main) {
+    var kids = main.children;
+    for (var i = 0; i < kids.length; i++) {
+      var o = kids[i].getAttribute("data-order");
+      if (o && Number(o) > order) {
+        main.insertBefore(s, kids[i]);
+        return s;
+      }
+    }
+    main.appendChild(s);
+    return s;
+  }
+  var footer = document.querySelector("footer");
+  if (footer) {
+    footer.parentNode.insertBefore(s, footer);
+  } else {
+    document.body.appendChild(s);
+  }
+  return s;
+}
+
+function setText(id, text) {
+  var target = $(id);
+  if (target && text) {
+    target.textContent = text;
+  }
+}
+
+function renderFacts(d) {
+  document.title = d.eventName || document.title;
+  setText("event-name", d.eventName);
+  setText("event-tagline", d.tagline);
+  var b = box("event-facts", 10);
+  b.innerHTML = "";
+  var p1 = el("p");
+  p1.appendChild(el("strong", t("when") + ": "));
+  p1.appendChild(document.createTextNode(d.whenText));
+  var p2 = el("p");
+  p2.appendChild(el("strong", t("where") + ": "));
+  p2.appendChild(document.createTextNode(d.location));
+  var places = el("p", null, "places");
+  places.id = "places-left";
+  if (d.systemOn === false) {
+    places.textContent = t("paused");
+  } else if (d.placesLeft > 0) {
+    places.textContent = fmt(t("placesLeft"), { n: d.placesLeft, total: d.capacity });
+  } else {
+    places.textContent = t("full");
+  }
+  b.appendChild(p1);
+  b.appendChild(p2);
+  b.appendChild(places);
+}
+
+function renderAnnouncement(d) {
+  var a = $("announcement");
+  if (!a) {
+    a = el("div");
+    a.id = "announcement";
+    a.setAttribute("role", "status");
+    document.body.insertBefore(a, document.body.firstChild);
+  }
+  a.textContent = d.announcement || "";
+  a.style.display = d.announcement ? "block" : "none";
+}
+
+function renderSchedule(d) {
+  var b = box("schedule", 40);
+  b.innerHTML = "";
+  b.appendChild(el("h2", t("scheduleTitle")));
+  var list = el("ul");
+  d.schedule.forEach(function (row) {
+    var li = el("li");
+    li.appendChild(el("strong", row.time + "  "));
+    var text = LANG !== "en" && row.session2 ? row.session2 : row.session;
+    li.appendChild(document.createTextNode(text));
+    list.appendChild(li);
+  });
+  b.appendChild(list);
+}
+
+function renderFaq(d) {
+  var b = box("faq", 70);
+  b.innerHTML = "";
+  b.appendChild(el("h2", t("faqTitle")));
+  d.faq.forEach(function (item) {
+    var det = el("details");
+    var second = LANG !== "en" && item.q2 && item.a2;
+    det.appendChild(el("summary", second ? item.q2 : item.q));
+    det.appendChild(el("p", second ? item.a2 : item.a));
+    b.appendChild(det);
+  });
+}
+
+function renderAll(d) {
+  LIVE = d;
+  renderFacts(d);
+  renderAnnouncement(d);
+  renderSchedule(d);
+  renderFaq(d);
+  HOOKS.forEach(function (fn) {
+    fn(d);
+  });
+}
+
+function showError() {
+  var b = box("event-facts", 10);
+  b.textContent = t("loadError");
+}
+
+function loadLive() {
+  fetch(API + "?action=content")
+    .then(function (r) {
+      return r.json();
+    })
+    .then(function (d) {
+      if (d && d.ok) {
+        renderAll(d);
+      } else {
+        showError();
+      }
+    })
+    .catch(showError);
+}
+
+// Counts one visit. No names, no emails, nothing personal.
+function countVisit() {
+  fetch(API + "?action=hit&lang=" + LANG).catch(function () {});
+}
+
+loadLive();
+countVisit();
+</script>
+
 </body>
 </html>

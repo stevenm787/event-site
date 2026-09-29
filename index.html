@@ -128,8 +128,8 @@
 
 <main>
   <section class="about">
-    <h2>About this event</h2>
-    <p>Come and celebrate the launch of Ace Cafe Brighton with a crowd that loves engines, good company and a bold night out. Whether you arrive on two wheels, four wheels or your own two feet, you are welcome here. Bring your friends, share your stories and help us kick things off in style.</p>
+    <h2 data-i18n="about-title">About this event</h2>
+    <p data-i18n="about-text">Come and celebrate the launch of Ace Cafe Brighton with a crowd that loves engines, good company and a bold night out. Whether you arrive on two wheels, four wheels or your own two feet, you are welcome here. Bring your friends, share your stories and help us kick things off in style.</p>
   </section>
 <div class="form-wrap">
 <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSc1IvR8piOa-cow1Oq4F_g0jaI_ykxal5JQXBEtYmu1_OZzuA/viewform?embedded=true" width="640" height="691" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
@@ -369,7 +369,28 @@ TEXT.en.smaller = "Text smaller";
 TEXT.en.contrast = "High contrast";
 
 // Your second language goes here in Block 6 of Day 2.
-TEXT[SECOND.code] = {};
+TEXT.pl = {
+  when: "Kiedy",
+  where: "Gdzie",
+  placesLeft: "Pozostałe miejsca: {n} z {total}",
+  full: "Wszystkie miejsca na to wydarzenie są zajęte. Nadal możesz zapisać się na listę oczekujących.",
+  paused: "Ta strona jest obecnie wstrzymana. Zajrzyj tu ponownie wkrótce.",
+  scheduleTitle: "Harmonogram",
+  faqTitle: "Najczęściej zadawane pytania",
+  loadError: "Przepraszamy, nie udało się załadować aktualnych informacji. Spróbuj ponownie później.",
+  calendar: "Dodaj do mojego kalendarza",
+  countdown: "Start za {d} dni, {h} godzin, {m} minut, {s} sekund",
+  started: "Wydarzenie trwa właśnie teraz!",
+  finished: "To wydarzenie już się zakończyło. Dziękujemy za przybycie!",
+  galleryTitle: "Galeria",
+  videoTitle: "Obejrzyj nasz krótki film",
+  aiLabel: "Obrazy i film na tej stronie zostały stworzone przy użyciu AI.",
+  bigger: "Większy tekst",
+  smaller: "Mniejszy tekst",
+  contrast: "Wysoki kontrast",
+  "about-title": "O tym wydarzeniu",
+  "about-text": "Przyjdź i świętuj otwarcie Ace Cafe Brighton w gronie ludzi, którzy kochają silniki, dobre towarzystwo i odważne wieczory. Niezależnie od tego, czy przyjedziesz na dwóch kółkach, na czterech, czy po prostu na własnych nogach, jesteś tu mile widziany. Zabierz znajomych, podziel się swoimi historiami i pomóż nam wystartować z klasą."
+};
 
 var GALLERY = [];
 var TEXT_SIZE = 100;

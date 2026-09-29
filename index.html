@@ -351,5 +351,244 @@ loadLive();
 countVisit();
 </script>
 
+<script>
+/* ================= DAY 2 SETTINGS (change only this) ================= */
+var SECOND = { code: "pl", label: "Polski" };   // your second language
+/* ===================================================================== */
+
+// Words this code adds to your page, in English.
+TEXT.en.calendar = "Add to my calendar";
+TEXT.en.countdown = "Starts in {d} days, {h} hours, {m} minutes, {s} seconds";
+TEXT.en.started = "The event is happening now!";
+TEXT.en.finished = "This event has finished. Thank you for coming!";
+TEXT.en.galleryTitle = "Gallery";
+TEXT.en.videoTitle = "Watch our short film";
+TEXT.en.aiLabel = "The images and video on this page were made with AI.";
+TEXT.en.bigger = "Text bigger";
+TEXT.en.smaller = "Text smaller";
+TEXT.en.contrast = "High contrast";
+
+// Your second language goes here in Block 6 of Day 2.
+TEXT[SECOND.code] = {};
+
+var GALLERY = [];
+var TEXT_SIZE = 100;
+
+(function addStyles2() {
+  var s = document.createElement("style");
+  s.textContent =
+    "#a11y-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;" +
+    "padding:8px 12px;background:#f0f0f0;border-bottom:1px solid #cccccc;}" +
+    "#a11y-bar button{padding:6px 10px;font-size:0.9em;cursor:pointer;}" +
+    "body.high-contrast{background:#000000 !important;color:#ffffff !important;}" +
+    "body.high-contrast .live-section{background:#000000 !important;" +
+    "color:#ffffff !important;border-color:#ffffff !important;}" +
+    "body.high-contrast a{color:#ffff00 !important;}" +
+    ".gallery-grid{display:grid;gap:12px;" +
+    "grid-template-columns:repeat(auto-fill,minmax(200px,1fr));}" +
+    ".gallery-grid img{width:100%;height:auto;border-radius:8px;}" +
+    ".gallery-grid figcaption{font-size:0.9em;}" +
+    ".live-section video,.live-section iframe{width:100%;max-width:100%;border:0;}";
+  document.head.appendChild(s);
+})();
+
+function stamp(d) {
+  return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+}
+
+// ---------- Countdown ----------
+var COUNTDOWN_TIMER = null;
+
+function startCountdown(d) {
+  var b = box("countdown", 11);
+  var start = new Date(d.whenIso).getTime();
+  var end = start + d.hours * 3600000;
+  function tick() {
+    var now = new Date().getTime();
+    var ms = start - now;
+    if (ms > 0) {
+      b.textContent = fmt(t("countdown"), {
+        d: Math.floor(ms / 86400000),
+        h: Math.floor((ms % 86400000) / 3600000),
+        m: Math.floor((ms % 3600000) / 60000),
+        s: Math.floor((ms % 60000) / 1000)
+      });
+    } else if (now < end) {
+      b.textContent = t("started");
+    } else {
+      b.textContent = t("finished");
+    }
+  }
+  tick();
+  if (COUNTDOWN_TIMER) {
+    clearInterval(COUNTDOWN_TIMER);
+  }
+  COUNTDOWN_TIMER = setInterval(tick, 1000);
+}
+
+// ---------- Add to calendar ----------
+function showCalendarLink(d) {
+  var start = new Date(d.whenIso);
+  var end = new Date(start.getTime() + d.hours * 3600000);
+  var url = "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+    "&text=" + encodeURIComponent(d.eventName) +
+    "&dates=" + stamp(start) + "/" + stamp(end) +
+    "&details=" + encodeURIComponent(d.tagline) +
+    "&location=" + encodeURIComponent(d.location);
+  var a = $("calendar-link");
+  if (!a) {
+    a = el("a");
+    a.id = "calendar-link";
+    var p = el("p");
+    p.appendChild(a);
+    box("event-facts", 10).appendChild(p);
+  }
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.textContent = t("calendar");
+}
+
+// ---------- Video ----------
+function showVideo(d) {
+  var url = d.videoUrl;
+  if (!url) {
+    return;
+  }
+  var b = box("promo-video", 20);
+  b.innerHTML = "";
+  b.appendChild(el("h2", t("videoTitle")));
+  if (/\.(mp4|webm)$/i.test(url)) {
+    var v = el("video");
+    v.controls = true;
+    v.preload = "metadata";
+    v.src = url;
+    v.setAttribute("title", d.eventName);
+    b.appendChild(v);
+  } else if (url.indexOf("youtube.com/embed/") !== -1) {
+    var f = el("iframe");
+    f.src = url;
+    f.setAttribute("title", d.eventName);
+    f.setAttribute("allowfullscreen", "");
+    f.height = "360";
+    b.appendChild(f);
+  }
+}
+
+// ---------- Gallery (pictures and alt text come from your Images tab) ----------
+function showGallery() {
+  if (GALLERY.length === 0) {
+    return;
+  }
+  var b = box("gallery", 30);
+  b.innerHTML = "";
+  b.appendChild(el("h2", t("galleryTitle")));
+  var grid = el("div", null, "gallery-grid");
+  GALLERY.forEach(function (item) {
+    var fig = el("figure");
+    var img = el("img");
+    img.src = item.file;
+    img.alt = item.alt;
+    img.setAttribute("loading", "lazy");
+    fig.appendChild(img);
+    if (item.caption) {
+      fig.appendChild(el("figcaption", item.caption));
+    }
+    grid.appendChild(fig);
+  });
+  b.appendChild(grid);
+}
+
+function loadGallery() {
+  fetch(API + "?action=gallery")
+    .then(function (r) {
+      return r.json();
+    })
+    .then(function (g) {
+      GALLERY = (g && g.items) || [];
+      showGallery();
+    })
+    .catch(function () {});
+}
+
+// ---------- The "made with AI" label ----------
+function showAiLabel() {
+  var b = box("ai-label", 90);
+  b.textContent = t("aiLabel");
+}
+
+// ---------- Text size, contrast and language buttons ----------
+function makeButton(id, label, onClick) {
+  var b = el("button", label);
+  b.type = "button";
+  b.id = id;
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+function buildToolbar() {
+  var bar = el("div");
+  bar.id = "a11y-bar";
+  bar.setAttribute("role", "toolbar");
+  bar.appendChild(makeButton("text-bigger", t("bigger"), function () {
+    TEXT_SIZE = Math.min(170, TEXT_SIZE + 10);
+    document.documentElement.style.fontSize = TEXT_SIZE + "%";
+  }));
+  bar.appendChild(makeButton("text-smaller", t("smaller"), function () {
+    TEXT_SIZE = Math.max(80, TEXT_SIZE - 10);
+    document.documentElement.style.fontSize = TEXT_SIZE + "%";
+  }));
+  bar.appendChild(makeButton("contrast-toggle", t("contrast"), function () {
+    document.body.classList.toggle("high-contrast");
+  }));
+  bar.appendChild(makeButton("lang-switch", SECOND.label, switchLanguage));
+  document.body.insertBefore(bar, document.body.firstChild);
+}
+
+function updateToolbar() {
+  $("text-bigger").textContent = t("bigger");
+  $("text-smaller").textContent = t("smaller");
+  $("contrast-toggle").textContent = t("contrast");
+  $("lang-switch").textContent = LANG === "en" ? SECOND.label : "English";
+}
+
+// Swap the words on your own page. Any element with data-i18n="some-key" is translated.
+function translatePage() {
+  var items = document.querySelectorAll("[data-i18n]");
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    if (!item.getAttribute("data-en")) {
+      item.setAttribute("data-en", item.textContent);
+    }
+    var key = item.getAttribute("data-i18n");
+    var own = TEXT[LANG] && TEXT[LANG][key];
+    var original = item.getAttribute("data-en");
+    item.textContent = LANG === "en" ? original : own || original;
+  }
+}
+
+function switchLanguage() {
+  LANG = LANG === "en" ? SECOND.code : "en";
+  document.documentElement.lang = LANG;
+  translatePage();
+  updateToolbar();
+  if (LIVE) {
+    renderAll(LIVE);
+  }
+}
+
+// Everything above runs every time the live information arrives.
+HOOKS.push(startCountdown);
+HOOKS.push(showCalendarLink);
+HOOKS.push(showVideo);
+HOOKS.push(function () {
+  showGallery();
+  showAiLabel();
+});
+
+buildToolbar();
+loadGallery();
+</script>
+
 </body>
 </html>

@@ -733,5 +733,68 @@ HOOKS.push(function (d) {
 });
 </script>
 
+<script>
+// Words this code adds to your page, in English.
+TEXT.en.askTitle = "Ask the event assistant";
+TEXT.en.askPlaceholder = "Type your question here";
+TEXT.en.askButton = "Ask";
+TEXT.en.thinking = "Thinking...";
+TEXT.en.aiNote = "This answer comes from an AI that only knows the FAQ. It can be wrong. " +
+  "Please check important details with the organiser.";
+TEXT.en.wait = "Please wait a few seconds before asking again.";
+
+BUILT.ask = "";
+var LAST_ASK = 0;
+
+// ---------- The ask-the-event assistant ----------
+function renderAsk() {
+  var b = box("ask", 60);
+  b.innerHTML = "";
+  b.appendChild(el("h2", t("askTitle")));
+  var box1 = input("ask", "text", 300);
+  box1.id = "ask-input";
+  box1.placeholder = t("askPlaceholder");
+  var go = el("button", t("askButton"));
+  go.type = "button";
+  go.id = "ask-button";
+  var answer = el("p");
+  answer.id = "ask-answer";
+  answer.setAttribute("role", "status");
+  b.appendChild(box1);
+  b.appendChild(go);
+  b.appendChild(answer);
+  b.appendChild(el("p", t("aiNote")));
+
+  go.addEventListener("click", function () {
+    var question = box1.value.trim();
+    if (question.length < 3) {
+      return;
+    }
+    var now = new Date().getTime();
+    if (now - LAST_ASK < 5000) {
+      answer.textContent = t("wait");
+      return;
+    }
+    LAST_ASK = now;
+    answer.textContent = t("thinking");
+    postJson({ action: "ask", question: question })
+      .then(function (res) {
+        answer.textContent = res.answer || res.message || t("error");
+      })
+      .catch(function () {
+        answer.textContent = t("error");
+      });
+  });
+}
+
+// Build the assistant once (and again if the language changes).
+HOOKS.push(function () {
+  if (BUILT.ask !== LANG) {
+    renderAsk();
+    BUILT.ask = LANG;
+  }
+});
+</script>
+
 </body>
 </html>

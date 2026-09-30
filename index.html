@@ -131,9 +131,6 @@
     <h2 data-i18n="about-title">About this event</h2>
     <p data-i18n="about-text">Come and celebrate the launch of Ace Cafe Brighton with a crowd that loves engines, good company and a bold night out. Whether you arrive on two wheels, four wheels or your own two feet, you are welcome here. Bring your friends, share your stories and help us kick things off in style.</p>
   </section>
-<div class="form-wrap">
-<iframe src="https://docs.google.com/forms/d/e/1FAIpQLSc1IvR8piOa-cow1Oq4F_g0jaI_ykxal5JQXBEtYmu1_OZzuA/viewform?embedded=true" width="640" height="691" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-</div>
 </main>
 
 <footer>
@@ -609,6 +606,131 @@ HOOKS.push(function () {
 
 buildToolbar();
 loadGallery();
+</script>
+
+<script>
+// Words this code adds to your page, in English.
+TEXT.en.signupTitle = "Sign up";
+TEXT.en.nameLabel = "Your name or nickname";
+TEXT.en.emailLabel = "Your email address";
+TEXT.en.questionLabel = "Any questions? (optional)";
+TEXT.en.consent = "We use your name and email only to run this event. We delete them afterwards.";
+TEXT.en.send = "Sign me up";
+TEXT.en.sending = "Sending...";
+TEXT.en.error = "Sorry, something went wrong. Please try again.";
+
+var BUILT = { signup: "" };
+
+function field(labelText, control) {
+  var wrap = el("p");
+  var label = el("label", labelText);
+  label.style.display = "block";
+  label.appendChild(document.createElement("br"));
+  label.appendChild(control);
+  wrap.appendChild(label);
+  return wrap;
+}
+
+function input(name, type, max) {
+  var i = el("input");
+  i.name = name;
+  i.type = type;
+  i.maxLength = max;
+  i.style.width = "100%";
+  i.style.boxSizing = "border-box";
+  i.style.padding = "8px";
+  return i;
+}
+
+function postJson(payload) {
+  return fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  }).then(function (r) {
+    return r.json();
+  });
+}
+
+// ---------- The sign-up form ----------
+function renderSignup(d) {
+  var b = box("signup", 50);
+  b.innerHTML = "";
+  b.appendChild(el("h2", t("signupTitle")));
+  if (d.systemOn === false) {
+    b.appendChild(el("p", t("paused")));
+    return;
+  }
+  var form = el("form");
+  form.id = "signup-form";
+  var nameBox = input("name", "text", 60);
+  nameBox.required = true;
+  var emailBox = input("email", "email", 120);
+  emailBox.required = true;
+  var questionBox = el("textarea");
+  questionBox.name = "question";
+  questionBox.maxLength = 300;
+  questionBox.rows = 3;
+  questionBox.style.width = "100%";
+  questionBox.style.boxSizing = "border-box";
+  form.appendChild(field(t("nameLabel"), nameBox));
+  form.appendChild(field(t("emailLabel"), emailBox));
+  form.appendChild(field(t("questionLabel"), questionBox));
+
+  // A hidden trap. Real people never see it, but robots fill it in.
+  var trap = el("div");
+  trap.setAttribute("aria-hidden", "true");
+  trap.style.position = "absolute";
+  trap.style.left = "-9999px";
+  var trapBox = input("website", "text", 100);
+  trapBox.tabIndex = -1;
+  trapBox.setAttribute("autocomplete", "off");
+  trap.appendChild(trapBox);
+  form.appendChild(trap);
+
+  form.appendChild(el("p", t("consent")));
+  var button = el("button", t("send"));
+  button.type = "submit";
+  var message = el("p");
+  message.id = "signup-message";
+  message.setAttribute("role", "status");
+  form.appendChild(button);
+  form.appendChild(message);
+
+  form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    button.disabled = true;
+    message.textContent = t("sending");
+    postJson({
+      action: "signup",
+      name: nameBox.value,
+      email: emailBox.value,
+      question: questionBox.value,
+      website: trapBox.value
+    })
+      .then(function (res) {
+        message.textContent = res.message || t("error");
+        if (res.ok) {
+          form.reset();
+          loadLive();
+        }
+        button.disabled = false;
+      })
+      .catch(function () {
+        message.textContent = t("error");
+        button.disabled = false;
+      });
+  });
+  b.appendChild(form);
+}
+
+// Build the sign-up form once (and again if the language changes).
+HOOKS.push(function (d) {
+  if (BUILT.signup !== LANG) {
+    renderSignup(d);
+    BUILT.signup = LANG;
+  }
+});
 </script>
 
 </body>
